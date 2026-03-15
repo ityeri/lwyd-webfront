@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+@font-face {
+    font-family: 'PretendardVariable';
+    font-weight: 45 920;
+    font-style: normal;
+    font-display: swap;
+    src: url('./assets/PretendardVariable.woff2') format('woff2-variations');
+}
+
+@theme {
+    --color-text-bright: #ffffff;
+    --color-text-primary: #7b7b7b;
+    --color-text-secondary: #5c5c5c;
+
+    --color-primary-900: #710000;
+    --color-primary-750: #891D0C;
+    --color-primary-575: #A93C2B;
+    --color-primary-425: #d0604d;
+
+    --color-background-primary: #191919;
+    --color-background-secondary: #212121;
+    --color-background-hover: rgba(255, 255, 255, 0.1);
+
+    --font-primary: 'PretendardVariable';
+
+    --radius-primary: 2rem;
+}
+
+@layer base {
+    html,
+    body {
+        background-color: var(--color-background-primary);
+        color: var(--color-text-primary);
+        font-family: sans-serif;
+    }
+
+    html,
+    body {
+        background-color: var(--color-background-primary);
+        color: var(--color-text-primary);
+        font-family: var(--font-primary), sans-serif;
+    }
+
+    h1 {
+        @apply text-5xl font-extrabold tracking-tight mb-6;
+    }
+    h2 {
+        @apply text-4xl font-bold tracking-tight mb-5;
+    }
+    h3 {
+        @apply text-3xl font-bold mb-4;
+    }
+    h4 {
+        @apply text-2xl font-semibold mb-3;
+    }
+    h5 {
+        @apply text-xl font-semibold mb-2;
+    }
+    h6 {
+        @apply text-lg font-medium mb-2;
+    }
+    p {
+        @apply text-base;
+    }
+    small {
+        @apply text-sm;
+    }
+
+    input {
+        all: unset;
+        min-width: 0;
+        width: 0;
+        @apply focus:outline-none focus:ring-0;
+    }
+
+    button {
+        @apply text-left m-0 p-0;
+    }
+}
