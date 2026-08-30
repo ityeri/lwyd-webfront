@@ -133,7 +133,10 @@ export default function UnderlineDropdownSelect({
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
+                        onBlur={() => {
+                            setFocused(false)
+                            setInputValue(selectedValue ?? '')
+                        }}
                         onKeyDown={handleKeyDown}
                     />
                     <div className="h-full">{backIcon}</div>
@@ -192,6 +195,7 @@ export default function UnderlineDropdownSelect({
                                     hover:bg-background-hover duration-150
                                     `}
                                         tabIndex={-1}
+                                        onMouseDown={(e) => e.preventDefault()}
                                         onClick={() => selectElement(key)}
                                         ref={
                                             index == highlightIndex

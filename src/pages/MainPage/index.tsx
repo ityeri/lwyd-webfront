@@ -414,9 +414,9 @@ export default function MainPage() {
                         <motion.div
                             key="timeline"
                             className="flex gap-4 pl-1"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
+                            initial={{ opacity: 0, height: 0, marginBottom: -20 }}
+                            animate={{ opacity: 1, height: 'auto', marginBottom: 0 }}
+                            exit={{ opacity: 0, height: 0, marginBottom: -20 }}
                             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                         >
                             <div className="flex flex-col items-center">
