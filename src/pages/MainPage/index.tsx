@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import InfoIcon from '@/componenets/icons/InfoIcon'
 import YouTubeVideoParms from '@/componenets/YouTubeVideo'
 import LoadingBar from '@/componenets/LoadingBar'
+import { AnimatePresence, motion } from 'framer-motion'
 
 type StreamInfo = {
     itag: number
@@ -29,13 +30,22 @@ type VideoInfo = {
 }
 
 type TaskState = {
-    status: 'WAIT' | 'PROCESSING' | 'DONE' | 'ERROR'
+    status: 'WAIT' | 'FETCHING' | 'DOWNLOADING' | 'PROCESSING' | 'DONE' | 'ERROR' | 'CANCELLED'
     progress: number | null
     error: string | null
 }
 
+type Mode = 'video' | 'audio' | 'both'
+
 const VIDEO_CONTAINERS = ['mp4', 'webm', 'mkv', 'mov']
 const AUDIO_CONTAINERS = ['mp3', 'wav', 'flac', 'ogg', 'm4a']
+
+const STAGES: { key: TaskState['status'], label: string }[] = [
+    { key: 'FETCHING', label: 'Fetching video info' },
+    { key: 'DOWNLOADING', label: 'Downloading media' },
+    { key: 'PROCESSING', label: 'Processing with ffmpeg' },
+    { key: 'DONE', label: 'Done' },
+]
 
 function extractVideoId(url: string): string | null {
     const match = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/)
@@ -60,6 +70,10 @@ function uniqueSorted(values: (string | null)[]): string[] {
     })
 }
 
+function stageIndex(status: TaskState['status']): number {
+    return STAGES.findIndex((stage) => stage.key === status)
+}
+
 export default function MainPage() {
     const [inputValue, setInputValue] = useState('')
     const [videoId, setVideoId] = useState<string | null>(null)
@@ -67,7 +81,7 @@ export default function MainPage() {
     const [infoLoading, setInfoLoading] = useState(false)
     const [infoError, setInfoError] = useState<string | null>(null)
 
-    const [mode, setMode] = useState<'video' | 'audio' | 'both'>('both')
+    const [mode, setMode] = useState<Mode>('both')
     const [videoResolution, setVideoResolution] = useState<string | null>(null)
     const [videoCodec, setVideoCodec] = useState<string | null>(null)
     const [audioBitrate, setAudioBitrate] = useState<string | null>(null)
@@ -84,20 +98,23 @@ export default function MainPage() {
     const audioCodecs = info ? uniqueSorted(info.audio_streams.map((stream) => codecFamily(stream.codec ?? ''))) : []
     const containers = mode === 'audio' ? AUDIO_CONTAINERS : VIDEO_CONTAINERS
 
-    const search = async () => {
-        const id = extractVideoId(inputValue)
-        if (!id) {
+    const searching = videoId !== null && !infoLoading && info === null && infoError === null
+    const downloading = task !== null && ['WAIT', 'FETCHING', 'DOWNLOADING', 'PROCESSING'].includes(task.status)
+
+    const search = async (id?: string) => {
+        const resolved = id ?? extractVideoId(inputValue)
+        if (!resolved) {
             setInfoError('유효한 유튜브 URL이 아닙니다')
             return
         }
-        setVideoId(id)
+        setVideoId(resolved)
         setInfo(null)
         setTaskId(null)
         setTask(null)
         setInfoLoading(true)
         setInfoError(null)
         try {
-            const response = await fetch(`/api/info/${id}`, { method: 'POST' })
+            const response = await fetch(`/api/info/${resolved}`, { method: 'POST' })
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
             const data: VideoInfo = await response.json()
             setInfo(data)
@@ -114,6 +131,15 @@ export default function MainPage() {
             setInfoError(error instanceof Error ? error.message : '알 수 없는 오류')
         } finally {
             setInfoLoading(false)
+        }
+    }
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        setInputValue(value)
+        const id = extractVideoId(value)
+        if (id && id !== videoId) {
+            search(id)
         }
     }
 
@@ -143,6 +169,15 @@ export default function MainPage() {
         }
     }
 
+    const cancelDownload = async () => {
+        if (!taskId) return
+        try {
+            await fetch(`/api/cancel/${taskId}`, { method: 'POST' })
+        } catch (error) {
+            setDownloadError(error instanceof Error ? error.message : '알 수 없는 오류')
+        }
+    }
+
     useEffect(() => {
         if (!taskId) return
         const poll = async () => {
@@ -161,6 +196,7 @@ export default function MainPage() {
     }, [taskId])
 
     const ready = info !== null && (mode === 'audio' ? audioBitrate !== null && audioCodec !== null : videoResolution !== null && videoCodec !== null)
+    const currentStage = task ? stageIndex(task.status) : -1
 
     return (
         <div className="flex flex-col items-center min-h-screen">
@@ -177,44 +213,56 @@ export default function MainPage() {
                             </div>
                         }
                         backIcon={
-                            <button className="h-full" onClick={search} disabled={infoLoading}>
+                            <button className="h-full" onClick={() => search()} disabled={infoLoading}>
                                 <SearchIcon fillColor="var(--color-text-primary)" />
                             </button>
                         }
                         textColor="var(--color-text-primary)"
                         placeholder="Put your youtube url here"
-                        onChange={(e) => setInputValue(e.target.value)}
+                        onChange={handleInputChange}
                         onKeyDown={(e) => e.key === 'Enter' && search()}
                     />
                 </div>
 
                 {infoError && <p className="text-primary-300 text-sm m-0">{infoError}</p>}
 
-                {infoLoading && (
-                    <div className="w-full h-2 bg-background-secondary rounded-full overflow-hidden">
-                        <LoadingBar type="loading" />
-                    </div>
-                )}
-
-                {videoId && (
-                    <div className="w-full aspect-video bg-background-secondary rounded-2xl overflow-hidden">
-                        <YouTubeVideoParms videoId={videoId} />
-                    </div>
-                )}
+                <div className="relative w-full aspect-video bg-background-secondary rounded-2xl overflow-hidden">
+                    {videoId && info && (
+                        <div className="absolute inset-0">
+                            <YouTubeVideoParms videoId={videoId} />
+                        </div>
+                    )}
+                    {(infoLoading || searching) && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-10">
+                            <p className="text-text-primary text-sm m-0">loading...</p>
+                            <div className="w-full h-2 bg-background-primary rounded-full overflow-hidden">
+                                <LoadingBar type="loading" />
+                            </div>
+                        </div>
+                    )}
+                    {!videoId && !infoLoading && (
+                        <div className="absolute inset-0" />
+                    )}
+                </div>
 
                 <div className={`flex flex-col gap-5 ${info ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
-                    <div className="flex gap-2">
+                    <div className="flex">
                         {(['video', 'audio', 'both'] as const).map((value) => (
                             <button
                                 key={value}
                                 onClick={() => setMode(value)}
                                 className={`
-                                flex-1 h-8 rounded-full text-sm
-                                ${mode === value ? 'bg-primary-575 text-text-bright' : 'bg-background-secondary text-text-primary'}
-                                hover:bg-background-hover duration-150 text-center
+                                flex-1 h-8 text-sm relative
+                                ${mode === value ? 'text-text-bright' : 'text-text-primary'}
+                                hover:text-text-bright duration-150
                                 `}
                             >
                                 {value === 'video' ? 'Video' : value === 'audio' ? 'Audio' : 'Both'}
+                                <motion.div
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-425 rounded-full"
+                                    animate={{ opacity: mode === value ? 1 : 0 }}
+                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                />
                             </button>
                         ))}
                     </div>
@@ -229,7 +277,7 @@ export default function MainPage() {
                                 elements={Object.fromEntries(
                                     videoResolutions.map((resolution) => [
                                         resolution,
-                                        <li className="ml-4">{resolution}</li>,
+                                        <span className="ml-4">{resolution}</span>,
                                     ]),
                                 )}
                                 maxHeight="10rem"
@@ -247,7 +295,7 @@ export default function MainPage() {
                                 elements={Object.fromEntries(
                                     videoCodecs.map((codec) => [
                                         codec,
-                                        <li className="ml-4">{codec}</li>,
+                                        <span className="ml-4">{codec}</span>,
                                     ]),
                                 )}
                                 maxHeight="10rem"
@@ -268,7 +316,7 @@ export default function MainPage() {
                                 elements={Object.fromEntries(
                                     audioBitrates.map((bitrate) => [
                                         bitrate,
-                                        <li className="ml-4">{bitrate}</li>,
+                                        <span className="ml-4">{bitrate}</span>,
                                     ]),
                                 )}
                                 maxHeight="10rem"
@@ -286,7 +334,7 @@ export default function MainPage() {
                                 elements={Object.fromEntries(
                                     audioCodecs.map((codec) => [
                                         codec,
-                                        <li className="ml-4">{codec}</li>,
+                                        <span className="ml-4">{codec}</span>,
                                     ]),
                                 )}
                                 maxHeight="10rem"
@@ -308,7 +356,7 @@ export default function MainPage() {
                             elements={Object.fromEntries(
                                 containers.map((format) => [
                                     format,
-                                    <li className="ml-4">{format}</li>,
+                                    <span className="ml-4">{format}</span>,
                                 ]),
                             )}
                             maxHeight="10rem"
@@ -319,14 +367,44 @@ export default function MainPage() {
                     </div>
                 </div>
 
-                {task?.status === 'PROCESSING' && (
-                    <div className="w-full h-2 bg-background-secondary rounded-full overflow-hidden">
-                        <LoadingBar type="progress" progress={task.progress ?? 0} />
-                    </div>
-                )}
-
-                {task?.status === 'ERROR' && <p className="text-primary-300 text-sm m-0">{task.error}</p>}
-                {downloadError && <p className="text-primary-300 text-sm m-0">{downloadError}</p>}
+                <AnimatePresence>
+                    {task && (downloading || task.status === 'ERROR' || task.status === 'CANCELLED') && (
+                        <motion.div
+                            key="timeline"
+                            className="flex flex-col gap-0 pl-1"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            {STAGES.map((stage, index) => {
+                                const state = currentStage > index ? 'done' : currentStage === index ? 'active' : 'pending'
+                                const isLast = index === STAGES.length - 1
+                                return (
+                                    <div key={stage.key} className="relative flex gap-4 pb-2">
+                                        {!isLast && (
+                                            <div className={`absolute left-[5px] top-4 bottom-0 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} />
+                                        )}
+                                        <div className={`relative mt-1.5 size-2.5 rounded-full shrink-0 ${state === 'done' ? 'bg-primary-425' : state === 'active' ? 'bg-primary-300' : 'bg-background-secondary'}`}>
+                                            {state === 'active' && (
+                                                <motion.div
+                                                    className="absolute inset-0 rounded-full bg-primary-300"
+                                                    animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
+                                                    transition={{ duration: 1, repeat: Infinity, ease: 'easeOut' }}
+                                                />
+                                            )}
+                                        </div>
+                                        <p className={`text-sm m-0 ${state === 'done' ? 'text-text-primary' : state === 'active' ? 'text-text-bright' : 'text-text-secondary'}`}>
+                                            {stage.label}
+                                        </p>
+                                    </div>
+                                )
+                            })}
+                            {task.status === 'ERROR' && <p className="text-primary-300 text-sm m-0 mt-1">{task.error}</p>}
+                            {task.status === 'CANCELLED' && <p className="text-text-secondary text-sm m-0 mt-1">cancelled</p>}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {task?.status === 'DONE' && taskId && (
                     <a
@@ -338,18 +416,48 @@ export default function MainPage() {
                 )}
 
                 {task?.status !== 'DONE' && (
-                    <button
-                        className={`
-                        w-full h-8 rounded-full text-center text-text-bright font-thin
-                        ${ready ? 'bg-primary-575' : 'bg-background-secondary opacity-30 pointer-events-none'}
-                        duration-150
-                        `}
-                        onClick={startDownload}
-                        disabled={!ready || task?.status === 'PROCESSING'}
-                    >
-                        Download
-                    </button>
+                    <div className="flex gap-2 items-center">
+                        <motion.button
+                            layout
+                            className={`
+                            h-8 rounded-full text-center text-text-bright font-thin duration-150
+                            ${ready ? 'bg-primary-575' : 'bg-background-secondary opacity-30 pointer-events-none'}
+                            ${downloading ? 'flex-1' : 'w-full'}
+                            `}
+                            onClick={startDownload}
+                            disabled={!ready || downloading}
+                            transition={{ layout: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+                        >
+                            {downloading ? 'downloading...' : 'Download'}
+                        </motion.button>
+                        <AnimatePresence>
+                            {downloading && (
+                                <motion.button
+                                    key="cancel"
+                                    layout
+                                    className="size-8 rounded-full bg-background-secondary text-text-primary hover:bg-background-hover duration-150 flex items-center justify-center"
+                                    onClick={cancelDownload}
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.5 }}
+                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                >
+                                    <svg className="size-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                    </svg>
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 )}
+
+                {task?.status === 'DONE' && (
+                    <div className="w-full h-2 bg-background-secondary rounded-full overflow-hidden">
+                        <LoadingBar type="progress" progress={1} />
+                    </div>
+                )}
+
+                {downloadError && <p className="text-primary-300 text-sm m-0">{downloadError}</p>}
             </div>
         </div>
     )

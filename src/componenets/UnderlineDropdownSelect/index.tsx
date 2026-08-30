@@ -187,7 +187,7 @@ export default function UnderlineDropdownSelect({
                                     <button
                                         className={`
                                     shrink-0
-                                    h-8 w-full px-4
+                                    h-11 w-full px-5
                                     ${index == highlightIndex && 'bg-background-hover'}
                                     hover:bg-background-hover duration-150
                                     `}
