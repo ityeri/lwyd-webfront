@@ -8,6 +8,7 @@ type UnderlineInputBox = {
     placeholder?: string
     textColor: string
     onChange?: (event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>) => void
+    onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 export default function UnderlineInputBox({
@@ -16,6 +17,7 @@ export default function UnderlineInputBox({
     placeholder,
     textColor,
     onChange,
+    onKeyDown,
 }: UnderlineInputBox) {
     const [focused, setFocused] = useState(false)
 
@@ -30,6 +32,7 @@ export default function UnderlineInputBox({
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
                     onChange={onChange}
+                    onKeyDown={onKeyDown}
                 />
                 <div className="h-full">{backIcon}</div>
             </div>

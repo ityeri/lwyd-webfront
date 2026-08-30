@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 @font-face {
@@ -16,25 +17,21 @@
     --color-primary-900: #710000;
     --color-primary-750: #891D0C;
     --color-primary-575: #A93C2B;
-    --color-primary-425: #d0604d;
+    --color-primary-425: #D0604D;
+    --color-primary-300: #F3806B;
+    --color-primary-150: #FF9B86;
 
     --color-background-primary: #191919;
     --color-background-secondary: #212121;
     --color-background-hover: rgba(255, 255, 255, 0.1);
 
     --font-primary: 'PretendardVariable';
+    --font-futura: 'Futura', 'Jost', sans-serif;
 
     --radius-primary: 2rem;
 }
 
 @layer base {
-    html,
-    body {
-        background-color: var(--color-background-primary);
-        color: var(--color-text-primary);
-        font-family: sans-serif;
-    }
-
     html,
     body {
         background-color: var(--color-background-primary);

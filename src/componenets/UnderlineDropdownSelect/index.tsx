@@ -20,12 +20,13 @@ export default function UnderlineDropdownSelect({
     backIcon,
     textColor,
     placeholder,
+    defaultValue,
     maxHeight,
     elements,
     onSelect = () => {}
 }: UnderlineDropdownSelect) {
     const [focused, setFocused] = useState(false)
-    const [inputValue, setInputValue] = useState('')
+    const [inputValue, setInputValue] = useState(defaultValue ?? '')
     const [selectedValue, setSelectedValue] = useState<string | null>(null)
     const inputElementRef = useRef<HTMLInputElement | null>(null)
     const highlightElementRef = useRef<HTMLButtonElement | null>(null)
@@ -52,6 +53,12 @@ export default function UnderlineDropdownSelect({
         }
     }, [prevPositioned, isPositioned]);
 
+    const [prevDefault, setPrevDefault] = useState(defaultValue)
+    if (defaultValue !== prevDefault) {
+        setPrevDefault(defaultValue)
+        setInputValue(defaultValue ?? '')
+        setSelectedValue(defaultValue ?? null)
+    }
 
     const selectElement = (key: string) => {
         setInputValue(key)
