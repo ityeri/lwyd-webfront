@@ -208,6 +208,13 @@ export default function MainPage() {
                 const response = await fetch(`/api/task/${taskId}`)
                 if (!response.ok) throw new Error(`HTTP ${response.status}`)
                 const data: TaskState & { task_id: string } = await response.json()
+                if (data.status === 'CANCELLED') {
+                    setCancelling(false)
+                    setTask(null)
+                    setTaskId(null)
+                    return
+                }
+                setCancelling(false)
                 setTask((prev) => {
                     const prevProgress = prev?.progress ?? 0
                     return {
@@ -250,6 +257,7 @@ export default function MainPage() {
                         }
                         textColor="var(--color-text-primary)"
                         placeholder="Put your youtube url here"
+                        autoFocus
                         onChange={handleInputChange}
                         onKeyDown={(e) => e.key === 'Enter' && search()}
                     />

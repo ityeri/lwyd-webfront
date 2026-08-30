@@ -7,6 +7,7 @@ type UnderlineInputBox = {
     backIcon?: React.ReactNode
     placeholder?: string
     textColor: string
+    autoFocus?: boolean
     onChange?: (event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>) => void
     onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
 }
@@ -16,6 +17,7 @@ export default function UnderlineInputBox({
     backIcon,
     placeholder,
     textColor,
+    autoFocus,
     onChange,
     onKeyDown,
 }: UnderlineInputBox) {
@@ -29,6 +31,7 @@ export default function UnderlineInputBox({
                     className="flex-1"
                     style={{ color: textColor }}
                     placeholder={placeholder}
+                    autoFocus={autoFocus}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
                     onChange={onChange}
