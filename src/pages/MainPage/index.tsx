@@ -47,6 +47,14 @@ const STAGES: { key: TaskState['status'], label: string }[] = [
     { key: 'DONE', label: 'Done' },
 ]
 
+const COLORS = {
+    bright: '#ffffff',
+    primary: '#7b7b7b',
+    secondary: '#5c5c5c',
+    primary425: '#D0604D',
+    primary300: '#F3806B',
+}
+
 function extractVideoId(url: string): string | null {
     const match = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/)
     return match?.[1] ?? null
@@ -241,7 +249,9 @@ export default function MainPage() {
                         </div>
                     )}
                     {!videoId && !infoLoading && (
-                        <div className="absolute inset-0" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <p className="text-text-secondary text-sm m-0">Paste a YouTube URL to preview it here</p>
+                        </div>
                     )}
                 </div>
 
@@ -257,9 +267,9 @@ export default function MainPage() {
                                 hover:text-text-bright duration-150
                                 `}
                             >
-                                {value === 'video' ? 'Video' : value === 'audio' ? 'Audio' : 'Both'}
+                                {value === 'video' ? 'Video only' : value === 'audio' ? 'Audio only' : 'Both'}
                                 <motion.div
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-425 rounded-full"
+                                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary-425 rounded-full"
                                     animate={{ opacity: mode === value ? 1 : 0 }}
                                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                                 />
@@ -267,83 +277,79 @@ export default function MainPage() {
                         ))}
                     </div>
 
-                    {mode !== 'audio' && (
-                        <div className="flex gap-4 h-8">
-                            <UnderlineDropdownSelect
-                                textColor="var(--color-text-primary)"
-                                frontIcon={
-                                    <VideoIcon fillColor="var(--color-text-primary)" />
-                                }
-                                elements={Object.fromEntries(
-                                    videoResolutions.map((resolution) => [
-                                        resolution,
-                                        <span className="ml-4">{resolution}</span>,
-                                    ]),
-                                )}
-                                maxHeight="10rem"
-                                placeholder="Video resolution"
-                                defaultValue={videoResolution ?? undefined}
-                                onSelect={setVideoResolution}
-                            />
-                            <UnderlineDropdownSelect
-                                textColor="var(--color-text-primary)"
-                                frontIcon={
-                                    <div className="h-full aspect-square overflow-hidden">
-                                        <InfoIcon fillColor="var(--color-text-primary)" />
-                                    </div>
-                                }
-                                elements={Object.fromEntries(
-                                    videoCodecs.map((codec) => [
-                                        codec,
-                                        <span className="ml-4">{codec}</span>,
-                                    ]),
-                                )}
-                                maxHeight="10rem"
-                                placeholder="Video codec"
-                                defaultValue={videoCodec ?? undefined}
-                                onSelect={setVideoCodec}
-                            />
-                        </div>
-                    )}
+                    <div className={`flex gap-4 h-8 ${mode === 'audio' ? 'invisible' : ''}`}>
+                        <UnderlineDropdownSelect
+                            textColor="var(--color-text-primary)"
+                            frontIcon={
+                                <VideoIcon fillColor="var(--color-text-primary)" />
+                            }
+                            elements={Object.fromEntries(
+                                videoResolutions.map((resolution) => [
+                                    resolution,
+                                    <span className="ml-4">{resolution}</span>,
+                                ]),
+                            )}
+                            maxHeight="10rem"
+                            placeholder="Video resolution"
+                            defaultValue={videoResolution ?? undefined}
+                            onSelect={setVideoResolution}
+                        />
+                        <UnderlineDropdownSelect
+                            textColor="var(--color-text-primary)"
+                            frontIcon={
+                                <div className="h-full aspect-square overflow-hidden">
+                                    <InfoIcon fillColor="var(--color-text-primary)" />
+                                </div>
+                            }
+                            elements={Object.fromEntries(
+                                videoCodecs.map((codec) => [
+                                    codec,
+                                    <span className="ml-4">{codec}</span>,
+                                ]),
+                            )}
+                            maxHeight="10rem"
+                            placeholder="Video codec"
+                            defaultValue={videoCodec ?? undefined}
+                            onSelect={setVideoCodec}
+                        />
+                    </div>
 
-                    {mode !== 'video' && (
-                        <div className="flex gap-4 h-8">
-                            <UnderlineDropdownSelect
-                                textColor="var(--color-text-primary)"
-                                frontIcon={
-                                    <AudioIcon fillColor="var(--color-text-primary)" />
-                                }
-                                elements={Object.fromEntries(
-                                    audioBitrates.map((bitrate) => [
-                                        bitrate,
-                                        <span className="ml-4">{bitrate}</span>,
-                                    ]),
-                                )}
-                                maxHeight="10rem"
-                                placeholder="Audio bitrate"
-                                defaultValue={audioBitrate ?? undefined}
-                                onSelect={setAudioBitrate}
-                            />
-                            <UnderlineDropdownSelect
-                                textColor="var(--color-text-primary)"
-                                frontIcon={
-                                    <div className="h-full aspect-square overflow-hidden">
-                                        <InfoIcon fillColor="var(--color-text-primary)" />
-                                    </div>
-                                }
-                                elements={Object.fromEntries(
-                                    audioCodecs.map((codec) => [
-                                        codec,
-                                        <span className="ml-4">{codec}</span>,
-                                    ]),
-                                )}
-                                maxHeight="10rem"
-                                placeholder="Audio codec"
-                                defaultValue={audioCodec ?? undefined}
-                                onSelect={setAudioCodec}
-                            />
-                        </div>
-                    )}
+                    <div className={`flex gap-4 h-8 ${mode === 'video' ? 'invisible' : ''}`}>
+                        <UnderlineDropdownSelect
+                            textColor="var(--color-text-primary)"
+                            frontIcon={
+                                <AudioIcon fillColor="var(--color-text-primary)" />
+                            }
+                            elements={Object.fromEntries(
+                                audioBitrates.map((bitrate) => [
+                                    bitrate,
+                                    <span className="ml-4">{bitrate}</span>,
+                                ]),
+                            )}
+                            maxHeight="10rem"
+                            placeholder="Audio bitrate"
+                            defaultValue={audioBitrate ?? undefined}
+                            onSelect={setAudioBitrate}
+                        />
+                        <UnderlineDropdownSelect
+                            textColor="var(--color-text-primary)"
+                            frontIcon={
+                                <div className="h-full aspect-square overflow-hidden">
+                                    <InfoIcon fillColor="var(--color-text-primary)" />
+                                </div>
+                            }
+                            elements={Object.fromEntries(
+                                audioCodecs.map((codec) => [
+                                    codec,
+                                    <span className="ml-4">{codec}</span>,
+                                ]),
+                            )}
+                            maxHeight="10rem"
+                            placeholder="Audio codec"
+                            defaultValue={audioCodec ?? undefined}
+                            onSelect={setAudioCodec}
+                        />
+                    </div>
 
                     <div className="w-full h-8">
                         <UnderlineDropdownSelect
@@ -368,10 +374,10 @@ export default function MainPage() {
                 </div>
 
                 <AnimatePresence>
-                    {task && (downloading || task.status === 'ERROR' || task.status === 'CANCELLED') && (
+                    {task && (
                         <motion.div
                             key="timeline"
-                            className="flex flex-col gap-0 pl-1"
+                            className="flex flex-col pl-1"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
@@ -380,23 +386,45 @@ export default function MainPage() {
                             {STAGES.map((stage, index) => {
                                 const state = currentStage > index ? 'done' : currentStage === index ? 'active' : 'pending'
                                 const isLast = index === STAGES.length - 1
+                                const showProgress = state === 'active' && (stage.key === 'DOWNLOADING' || stage.key === 'PROCESSING' || stage.key === 'DONE')
+                                const dotColor = state === 'done' ? COLORS.primary425 : state === 'active' ? COLORS.primary300 : COLORS.secondary
+                                const textColor = state === 'done' ? COLORS.primary : state === 'active' ? COLORS.bright : COLORS.secondary
                                 return (
-                                    <div key={stage.key} className="relative flex gap-4 pb-2">
+                                    <div key={stage.key} className="relative flex gap-4 py-2">
                                         {!isLast && (
-                                            <div className={`absolute left-[5px] top-4 bottom-0 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} />
+                                            <div className={`absolute left-[5px] top-6 bottom-0 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} />
                                         )}
-                                        <div className={`relative mt-1.5 size-2.5 rounded-full shrink-0 ${state === 'done' ? 'bg-primary-425' : state === 'active' ? 'bg-primary-300' : 'bg-background-secondary'}`}>
+                                        <motion.div
+                                            className="relative mt-2 size-2.5 rounded-full shrink-0"
+                                            animate={{ backgroundColor: dotColor }}
+                                            transition={{ duration: 0.6, ease: 'easeOut' }}
+                                        >
                                             {state === 'active' && (
                                                 <motion.div
-                                                    className="absolute inset-0 rounded-full bg-primary-300"
-                                                    animate={{ scale: [1, 1.8], opacity: [0.6, 0] }}
+                                                    className="absolute inset-0 rounded-full"
+                                                    animate={{ scale: [1, 1.8], opacity: [0.6, 0], backgroundColor: dotColor }}
                                                     transition={{ duration: 1, repeat: Infinity, ease: 'easeOut' }}
                                                 />
                                             )}
+                                        </motion.div>
+                                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                                            <motion.p
+                                                className="text-sm m-0 whitespace-nowrap"
+                                                animate={{ color: textColor }}
+                                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                            >
+                                                {stage.label}
+                                            </motion.p>
+                                            {showProgress && (
+                                                <div className="flex-1 h-1 bg-background-secondary rounded-full overflow-hidden">
+                                                    <motion.div
+                                                        className="h-full bg-primary-425 rounded-full"
+                                                        animate={{ width: `${(task.progress ?? 0) * 100}%` }}
+                                                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className={`text-sm m-0 ${state === 'done' ? 'text-text-primary' : state === 'active' ? 'text-text-bright' : 'text-text-secondary'}`}>
-                                            {stage.label}
-                                        </p>
                                     </div>
                                 )
                             })}
@@ -418,42 +446,37 @@ export default function MainPage() {
                 {task?.status !== 'DONE' && (
                     <div className="flex gap-2 items-center">
                         <motion.button
-                            layout
                             className={`
-                            h-8 rounded-full text-center text-text-bright font-thin duration-150
-                            ${ready ? 'bg-primary-575' : 'bg-background-secondary opacity-30 pointer-events-none'}
-                            ${downloading ? 'flex-1' : 'w-full'}
+                            h-8 rounded-full text-center font-thin flex-1
+                            ${ready && !downloading ? 'bg-primary-575 text-text-bright' : 'bg-background-secondary text-text-secondary'}
+                            ${!ready ? 'opacity-30 pointer-events-none' : ''}
                             `}
                             onClick={startDownload}
                             disabled={!ready || downloading}
-                            transition={{ layout: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
                         >
                             {downloading ? 'downloading...' : 'Download'}
                         </motion.button>
                         <AnimatePresence>
                             {downloading && (
-                                <motion.button
+                                <motion.div
                                     key="cancel"
-                                    layout
-                                    className="size-8 rounded-full bg-background-secondary text-text-primary hover:bg-background-hover duration-150 flex items-center justify-center"
-                                    onClick={cancelDownload}
-                                    initial={{ opacity: 0, scale: 0.5 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.5 }}
-                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                    className="overflow-hidden"
+                                    initial={{ width: 0, opacity: 0 }}
+                                    animate={{ width: 32, opacity: 1 }}
+                                    exit={{ width: 0, opacity: 0 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                                 >
-                                    <svg className="size-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                    </svg>
-                                </motion.button>
+                                    <button
+                                        className="size-8 rounded-full bg-background-secondary text-text-primary hover:bg-background-hover duration-150 flex items-center justify-center"
+                                        onClick={cancelDownload}
+                                    >
+                                        <svg className="size-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        </svg>
+                                    </button>
+                                </motion.div>
                             )}
                         </AnimatePresence>
-                    </div>
-                )}
-
-                {task?.status === 'DONE' && (
-                    <div className="w-full h-2 bg-background-secondary rounded-full overflow-hidden">
-                        <LoadingBar type="progress" progress={1} />
                     </div>
                 )}
 
