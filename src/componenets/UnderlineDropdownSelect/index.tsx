@@ -64,6 +64,7 @@ export default function UnderlineDropdownSelect({
         setInputValue(key)
         setSelectedValue(key)
         onSelect(key)
+        inputElementRef.current?.blur()
     }
 
     // Show all options unless the user is actually typing a filter.
@@ -135,7 +136,19 @@ export default function UnderlineDropdownSelect({
                         onFocus={() => setFocused(true)}
                         onBlur={() => {
                             setFocused(false)
-                            setInputValue(selectedValue ?? '')
+                            const trimmed = inputValue.trim()
+                            const keys = Object.keys(elements)
+                            const exact = keys.find((key) => key === trimmed)
+                            const closest = exact ?? keys.find((key) => key.startsWith(trimmed))
+                            if (trimmed !== '' && closest) {
+                                setInputValue(closest)
+                                if (closest !== selectedValue) {
+                                    setSelectedValue(closest)
+                                    onSelect(closest)
+                                }
+                            } else {
+                                setInputValue(selectedValue ?? '')
+                            }
                         }}
                         onKeyDown={handleKeyDown}
                     />

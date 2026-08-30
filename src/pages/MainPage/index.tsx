@@ -100,6 +100,7 @@ export default function MainPage() {
     const [taskId, setTaskId] = useState<string | null>(null)
     const [task, setTask] = useState<TaskState | null>(null)
     const [downloadError, setDownloadError] = useState<string | null>(null)
+    const [cancelling, setCancelling] = useState(false)
 
     const videoResolutions = info ? uniqueSorted(info.video_streams.map((stream) => stream.resolution)) : []
     const videoCodecs = info ? uniqueSorted(info.video_streams.map((stream) => codecFamily(stream.codec ?? ''))) : []
@@ -184,9 +185,11 @@ export default function MainPage() {
 
     const cancelDownload = async () => {
         if (!taskId) return
+        setCancelling(true)
         try {
             await fetch(`/api/cancel/${taskId}`, { method: 'POST' })
         } catch (error) {
+            setCancelling(false)
             setDownloadError(error instanceof Error ? error.message : '알 수 없는 오류')
         }
     }
@@ -195,6 +198,7 @@ export default function MainPage() {
         setTaskId(null)
         setTask(null)
         setDownloadError(null)
+        setCancelling(false)
     }
 
     useEffect(() => {
@@ -261,8 +265,8 @@ export default function MainPage() {
                     )}
                     {(infoLoading || searching) && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-10">
-                            <p className="text-text-primary text-sm m-0">loading...</p>
-                            <div className="w-full h-2 bg-background-primary rounded-full overflow-hidden">
+                            <p className="text-text-primary text-xl m-0">loading...</p>
+                            <div className="w-1/2 h-1 bg-background-primary rounded-full overflow-hidden">
                                 <LoadingBar type="loading" />
                             </div>
                         </div>
@@ -503,7 +507,7 @@ export default function MainPage() {
 
                 {task?.status !== 'DONE' && (
                     <div className="flex flex-col gap-2">
-                        <div className="flex gap-2 items-center">
+                        <div className="flex items-center">
                             <motion.button
                                 className={`
                                 h-8 rounded-full text-center font-thin flex-1
@@ -513,26 +517,32 @@ export default function MainPage() {
                                 onClick={startDownload}
                                 disabled={!ready || downloading}
                             >
-                                {downloading ? 'downloading...' : 'Download'}
+                                {cancelling ? 'cancelling...' : downloading ? 'downloading...' : 'Download'}
                             </motion.button>
                             <AnimatePresence>
                                 {downloading && (
                                     <motion.div
                                         key="cancel"
                                         className="overflow-hidden"
-                                        initial={{ width: 0, opacity: 0 }}
-                                        animate={{ width: 32, opacity: 1 }}
-                                        exit={{ width: 0, opacity: 0 }}
+                                        initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+                                        animate={{ width: 32, opacity: 1, marginLeft: 8 }}
+                                        exit={{ width: 0, opacity: 0, marginLeft: 0 }}
                                         transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                                     >
-                                        <button
-                                            className="size-8 rounded-full bg-background-secondary text-text-primary hover:bg-background-hover duration-150 flex items-center justify-center"
-                                            onClick={cancelDownload}
-                                        >
-                                            <svg className="size-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                            </svg>
-                                        </button>
+                                        {cancelling ? (
+                                            <div className="size-8 rounded-full bg-background-secondary flex items-center justify-center">
+                                                <div className="size-4 rounded-full border-2 border-text-secondary border-t-transparent animate-spin" />
+                                            </div>
+                                        ) : (
+                                            <button
+                                                className="size-8 rounded-full bg-background-secondary text-text-primary hover:bg-background-hover duration-150 flex items-center justify-center"
+                                                onClick={cancelDownload}
+                                            >
+                                                <svg className="size-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                                </svg>
+                                            </button>
+                                        )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
