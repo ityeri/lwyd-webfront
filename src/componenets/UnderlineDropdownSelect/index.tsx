@@ -30,7 +30,7 @@ export default function UnderlineDropdownSelect({
     const [selectedValue, setSelectedValue] = useState<string | null>(null)
     const inputElementRef = useRef<HTMLInputElement | null>(null)
     const highlightElementRef = useRef<HTMLButtonElement | null>(null)
-    const {refs, floatingStyles, isPositioned} = useFloating({
+    const {refs, floatingStyles, isPositioned, placement} = useFloating({
         open: focused,
         onOpenChange: setFocused,
         placement: 'bottom-start',
@@ -66,8 +66,10 @@ export default function UnderlineDropdownSelect({
         onSelect(key)
     }
 
+    // Show all options unless the user is actually typing a filter.
+    const isFiltering = inputValue !== selectedValue
     const displayElements = Object.keys(elements).filter((key) =>
-        key.includes(inputValue),
+        isFiltering ? key.includes(inputValue) : true,
     )
     const [highlightIndex, setHighlightIndex] = useState<number | null>(null)
 
@@ -112,6 +114,10 @@ export default function UnderlineDropdownSelect({
             })
     })
 
+    // Reveal by cropping from the anchor edge: bottom placement opens downward,
+    // flipped (top) placement opens upward.
+    const opensDownward = placement.startsWith('bottom')
+    const closedClipPath = opensDownward ? 'inset(0% 0% 100% 0%)' : 'inset(100% 0% 0% 0%)'
 
     return (
         <div className="relative size-full">
@@ -152,7 +158,10 @@ export default function UnderlineDropdownSelect({
                             maxHeight: maxHeight,
                         }}
                         transition={{
-                            opacity: {duration: 0.2},
+                            clipPath: {
+                                duration: 0.25,
+                                ease: [0.16, 1, 0.3, 1]
+                            },
                             transform: {
                                 duration: isPositioned && prevPositioned ? 0.2 : 0,
                                 ease: [0.16, 1, 0.3, 1]
@@ -160,17 +169,17 @@ export default function UnderlineDropdownSelect({
                         }}
                         animate={{
                             transform: floatingStyles.transform,
-                            opacity: 1
+                            clipPath: 'inset(0% 0% 0% 0%)',
                         }}
                         initial={{
-                            opacity: 0,
+                            clipPath: closedClipPath,
                         }}
                         exit={{
-                            opacity: 0,
+                            clipPath: closedClipPath,
                         }}
                     >
                         <div
-                            className="flex flex-col flex-1 py-4 overflow-y-scroll"
+                            className="flex flex-col flex-1 overflow-y-scroll"
                             tabIndex={-1}
                         >
                             {displayElements.map((key, index) => {
