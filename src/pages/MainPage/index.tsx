@@ -44,7 +44,7 @@ const AUDIO_CONTAINERS = ['mp3', 'wav', 'flac', 'ogg', 'm4a']
 const STAGES: { key: TaskState['status'], label: string }[] = [
     { key: 'FETCHING', label: 'Fetching video info' },
     { key: 'DOWNLOADING', label: 'Downloading media' },
-    { key: 'PROCESSING', label: 'Pre processing' },
+    { key: 'PROCESSING', label: 'Post processing' },
     { key: 'DONE', label: 'Done' },
 ]
 
@@ -425,9 +425,9 @@ export default function MainPage() {
                                     const isLast = index === STAGES.length - 1
                                     const dotColor = state === 'done' ? COLORS.primary425 : state === 'active' ? COLORS.primary300 : COLORS.secondary
                                     return (
-                                        <div key={stage.key} className="relative flex flex-col items-center" style={{ minHeight: isLast ? '1.25rem' : '3rem' }}>
+                                        <div key={stage.key} className="relative flex flex-col items-center justify-center" style={{ minHeight: isLast ? '1.25rem' : '3rem' }}>
                                             {!isLast && (
-                                                <div className={`absolute left-1/2 -translate-x-1/2 top-3 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} style={{ height: 'calc(100% - 0.5rem)' }} />
+                                                <div className={`absolute left-1/2 -translate-x-1/2 top-1/2 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} style={{ height: '100%' }} />
                                             )}
                                             <motion.div
                                                 className="relative size-2.5 rounded-full shrink-0"
@@ -437,7 +437,7 @@ export default function MainPage() {
                                                 {state === 'active' && (
                                                     <motion.div
                                                         className="absolute inset-0 rounded-full"
-                                                        animate={{ scale: [1, 2], opacity: [0.9, 0], backgroundColor: dotColor }}
+                                                        animate={{ scale: [1, 2.4], opacity: [1, 0], backgroundColor: dotColor }}
                                                         transition={{ duration: 1, repeat: Infinity, ease: 'easeOut' }}
                                                     />
                                                 )}
@@ -465,6 +465,7 @@ export default function MainPage() {
                                                     <div className="flex-1 h-1 bg-background-secondary rounded-full overflow-hidden">
                                                         <motion.div
                                                             className="h-full bg-primary-425 rounded-full"
+                                                            initial={{ width: '0%' }}
                                                             animate={{ width: `${Math.min(100, (task.progress ?? 0) * 100)}%` }}
                                                             transition={{ duration: 0.4, ease: 'easeOut' }}
                                                         />
@@ -493,7 +494,9 @@ export default function MainPage() {
                             className="size-8 rounded-full bg-background-secondary text-text-primary hover:bg-background-hover duration-150 flex items-center justify-center"
                             onClick={resetDownload}
                         >
-                            <RefreshIcon fillColor="var(--color-text-primary)" />
+                            <div className="size-4">
+                                <RefreshIcon fillColor="var(--color-text-primary)" />
+                            </div>
                         </button>
                     </div>
                 )}
