@@ -27,7 +27,7 @@ export default function UnderlineDropdownSelect({
 }: UnderlineDropdownSelect) {
     const [focused, setFocused] = useState(false)
     const [inputValue, setInputValue] = useState(defaultValue ?? '')
-    const [selectedValue, setSelectedValue] = useState<string | null>(null)
+    const [selectedValue, setSelectedValue] = useState<string | null>(defaultValue ?? null)
     const inputElementRef = useRef<HTMLInputElement | null>(null)
     const highlightElementRef = useRef<HTMLButtonElement | null>(null)
     const {refs, floatingStyles, isPositioned, placement} = useFloating({
