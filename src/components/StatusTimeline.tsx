@@ -5,7 +5,7 @@ import { useMainStore } from '../store/useMainStore'
 const STAGES: { key: TaskStatus, label: string }[] = [
     { key: TaskStatus.FETCHING, label: 'Fetching video info' },
     { key: TaskStatus.DOWNLOADING, label: 'Downloading media' },
-    { key: TaskStatus.PROCESSING, label: 'Post processing' },
+    { key: TaskStatus.POST_PROCESSING, label: 'Post processing' },
     { key: TaskStatus.DONE, label: 'Done' },
 ]
 
@@ -23,7 +23,7 @@ function stageIndex(status: TaskStatus): number {
 
 const PROGRESS_STATUSES = new Set<TaskStatus>([
     TaskStatus.DOWNLOADING,
-    TaskStatus.PROCESSING,
+    TaskStatus.POST_PROCESSING,
     TaskStatus.DONE,
 ])
 

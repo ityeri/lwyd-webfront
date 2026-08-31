@@ -8,7 +8,7 @@ const DOWNLOADING_STATUSES = new Set<TaskStatus>([
     TaskStatus.WAIT,
     TaskStatus.FETCHING,
     TaskStatus.DOWNLOADING,
-    TaskStatus.PROCESSING,
+    TaskStatus.POST_PROCESSING,
 ])
 
 export default function DownloadSection() {

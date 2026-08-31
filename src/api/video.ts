@@ -30,7 +30,7 @@ export type DownloadRequest = {
 }
 
 export type TaskState = {
-    status: 'WAIT' | 'FETCHING' | 'DOWNLOADING' | 'PROCESSING' | 'DONE' | 'ERROR' | 'CANCELLED'
+    status: 'WAIT' | 'FETCHING' | 'DOWNLOADING' | 'POST_PROCESSING' | 'DONE' | 'ERROR' | 'CANCELLED'
     progress: number | null
     error: string | null
 }
