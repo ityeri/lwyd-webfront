@@ -13,11 +13,11 @@ export function useDownloadPolling() {
             try {
                 const state = await pollTask(taskId)
                 if (!cancelled && state) {
-                    setTask((prev) => ({
+                    setTask({
                         status: state.status,
-                        progress: Math.max(prev?.progress ?? 0, state.progress ?? 0),
+                        progress: state.progress ?? null,
                         error: state.error,
-                    }))
+                    })
                 }
             } catch (error) {
                 if (!cancelled) {
