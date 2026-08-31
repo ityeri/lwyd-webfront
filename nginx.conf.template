@@ -5,9 +5,9 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # API requests -> lwyd-back container (same compose network)
+    # API requests -> backend service (host/port injected via env at container start)
     location /api/ {
-        proxy_pass http://lwyd-back:8000;
+        proxy_pass http://${API_HOST}:${API_PORT};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
