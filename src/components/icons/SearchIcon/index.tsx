@@ -1,8 +1,8 @@
-type SearchIconParms = {
+type SearchIconParams = {
     fillColor: string
 }
 
-export default function SearchIcon({ fillColor }: SearchIconParms) {
+export default function SearchIcon({ fillColor }: SearchIconParams) {
     return (
         <svg
             className="size-full min-w-0 min-h-0"

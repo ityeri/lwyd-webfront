@@ -1,4 +1,4 @@
-import RefreshIcon from '@/componenets/icons/RefreshIcon'
+import RefreshIcon from '@/components/icons/RefreshIcon'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Mode, TaskStatus } from '../enums'
 import { useMainStore } from '../store/useMainStore'

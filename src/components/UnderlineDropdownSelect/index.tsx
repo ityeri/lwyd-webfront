@@ -1,4 +1,4 @@
-import UnderlineBox from '@/componenets/UnderlineBox'
+import UnderlineBox from '@/components/UnderlineBox'
 import {AnimatePresence, motion} from 'framer-motion'
 import * as React from 'react'
 import {useEffect, useRef, useState} from 'react'

@@ -1,8 +1,8 @@
-type YouTubeVideoParms = {
+type YouTubeVideoParams = {
     videoId: string
 }
 
-export default function YouTubeVideoParms({videoId}: YouTubeVideoParms) {
+export default function YouTubeVideo({videoId}: YouTubeVideoParams) {
     return (
         <iframe
             className="size-full" src={`https://www.youtube.com/embed/${videoId}`}

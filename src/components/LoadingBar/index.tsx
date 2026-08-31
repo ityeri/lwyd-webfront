@@ -1,11 +1,11 @@
 import {motion} from "framer-motion";
 
-type LoadingBarParms = {
+type LoadingBarParams = {
     type: 'progress' | 'loading'
     progress?: number
 }
 
-export default function LoadingBarParms({type, progress = 0}: LoadingBarParms) {
+export default function LoadingBar({type, progress = 0}: LoadingBarParams) {
     return <div className="relative size-full bg-background-secondary rounded-full overflow-hidden">
         <motion.div
             className="absolute h-full bg-primary-425"

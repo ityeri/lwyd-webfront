@@ -1,5 +1,5 @@
-import YouTubeVideoParms from '@/componenets/YouTubeVideo'
-import LoadingBar from '@/componenets/LoadingBar'
+import YouTubeVideo from '@/components/YouTubeVideo'
+import LoadingBar from '@/components/LoadingBar'
 import { useMainStore } from '../store/useMainStore'
 
 export default function VideoPreview() {
@@ -14,7 +14,7 @@ export default function VideoPreview() {
         <div className="relative w-full aspect-video bg-background-secondary rounded-2xl overflow-hidden">
             {videoId && info && (
                 <div className="absolute inset-0">
-                    <YouTubeVideoParms videoId={videoId} />
+                    <YouTubeVideo videoId={videoId} />
                 </div>
             )}
             {(infoLoading || searching) && (

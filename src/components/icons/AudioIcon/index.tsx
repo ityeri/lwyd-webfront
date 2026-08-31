@@ -1,8 +1,8 @@
-type AudioIconParms = {
+type AudioIconParams = {
     fillColor: string
 }
 
-export default function AudioIcon({ fillColor }: AudioIconParms) {
+export default function AudioIcon({ fillColor }: AudioIconParams) {
     return (
         <svg
             className="size-full min-w-0 min-h-0"

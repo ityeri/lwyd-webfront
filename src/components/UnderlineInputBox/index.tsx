@@ -1,4 +1,4 @@
-import UnderlineBox from '@/componenets/UnderlineBox'
+import UnderlineBox from '@/components/UnderlineBox'
 import { useState } from 'react'
 import * as React from 'react'
 

@@ -1,6 +1,6 @@
-import LinkIcon from '@/componenets/icons/LinkIcon'
-import SearchIcon from '@/componenets/icons/SearchIcon'
-import UnderlineInputBox from '@/componenets/UnderlineInputBox'
+import LinkIcon from '@/components/icons/LinkIcon'
+import SearchIcon from '@/components/icons/SearchIcon'
+import UnderlineInputBox from '@/components/UnderlineInputBox'
 import { useMainStore } from '../store/useMainStore'
 import { extractVideoId } from '../utils'
 

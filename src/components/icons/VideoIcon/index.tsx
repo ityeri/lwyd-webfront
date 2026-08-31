@@ -1,8 +1,8 @@
-type VideoIconParms = {
+type VideoIconParams = {
     fillColor: string
 }
 
-export default function VideoIcon({ fillColor }: VideoIconParms) {
+export default function VideoIcon({ fillColor }: VideoIconParams) {
     return (
         <svg
             className="size-full min-w-0 min-h-0"

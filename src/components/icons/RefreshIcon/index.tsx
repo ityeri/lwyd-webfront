@@ -1,8 +1,8 @@
-type RefreshIconParms = {
+type RefreshIconParams = {
     fillColor: string
 }
 
-export default function RefreshIcon({ fillColor }: RefreshIconParms) {
+export default function RefreshIcon({ fillColor }: RefreshIconParams) {
     return (
         <svg
             className="size-full min-w-0 min-h-0"

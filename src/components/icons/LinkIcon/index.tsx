@@ -1,8 +1,8 @@
-type LinkIconParms = {
+type LinkIconParams = {
     fillColor: string
 }
 
-export default function LinkIcon({ fillColor }: LinkIconParms) {
+export default function LinkIcon({ fillColor }: LinkIconParams) {
     return (
         <svg
             className="size-full min-w-0 min-h-0"

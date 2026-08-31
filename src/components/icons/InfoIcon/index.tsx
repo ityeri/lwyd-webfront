@@ -1,8 +1,8 @@
-type InfoIconParms = {
+type InfoIconParams = {
     fillColor: string
 }
 
-export default function InfoIcon({ fillColor }: InfoIconParms) {
+export default function InfoIcon({ fillColor }: InfoIconParams) {
     return (
         <svg
             className="size-full min-w-0 min-h-0"
