@@ -273,7 +273,7 @@ export default function MainPage() {
                     )}
                     {(infoLoading || searching) && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-10">
-                            <p className="text-text-primary text-xl m-0">loading...</p>
+                            <p className="text-text-primary text-base m-0">loading...</p>
                             <div className="w-1/2 h-1 bg-background-primary rounded-full overflow-hidden">
                                 <LoadingBar type="loading" />
                             </div>
@@ -437,7 +437,7 @@ export default function MainPage() {
                                     const isLast = index === STAGES.length - 1
                                     const dotColor = state === 'done' ? COLORS.primary425 : state === 'active' ? COLORS.primary300 : COLORS.secondary
                                     return (
-                                        <div key={stage.key} className="relative flex flex-col items-center justify-center" style={{ minHeight: isLast ? '1.25rem' : '3rem' }}>
+                                        <div key={stage.key} className="relative flex flex-col items-center justify-center" style={{ minHeight: '3rem' }}>
                                             {!isLast && (
                                                 <div className={`absolute left-1/2 -translate-x-1/2 top-1/2 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} style={{ height: '100%' }} />
                                             )}
@@ -464,7 +464,7 @@ export default function MainPage() {
                                     const textColor = state === 'done' ? COLORS.primary : state === 'active' ? COLORS.bright : COLORS.secondary
                                     const showBar = state === 'active' && showProgress
                                     return (
-                                        <div key={stage.key} className="flex items-center gap-3" style={{ minHeight: index === STAGES.length - 1 ? '1.25rem' : '3rem' }}>
+                                        <div key={stage.key} className="flex items-center gap-3" style={{ minHeight: '3rem' }}>
                                             <motion.p
                                                 className="text-sm m-0 whitespace-nowrap"
                                                 animate={{ color: textColor }}
