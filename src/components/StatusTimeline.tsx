@@ -30,13 +30,12 @@ const PROGRESS_STATUSES = new Set<TaskStatus>([
 export default function StatusTimeline() {
     const task = useMainStore((state) => state.task)
 
-    if (!task) return null
-
-    const currentStage = stageIndex(task.status)
-    const showProgress = PROGRESS_STATUSES.has(task.status)
+    const currentStage = task ? stageIndex(task.status) : -1
+    const showProgress = task !== null && PROGRESS_STATUSES.has(task.status)
 
     return (
         <AnimatePresence>
+            {task && (
             <motion.div
                 key="timeline"
                 className="flex gap-4 pl-1"
@@ -105,6 +104,7 @@ export default function StatusTimeline() {
                     {task.status === TaskStatus.ERROR && <p className="text-primary-300 text-sm m-0 mt-1">{task.error}</p>}
                 </div>
             </motion.div>
+            )}
         </AnimatePresence>
     )
 }
