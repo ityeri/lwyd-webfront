@@ -41,7 +41,7 @@ export async function fetchVideoInfo(videoId: string): Promise<VideoInfo> {
 }
 
 export async function startDownload(videoId: string, request: DownloadRequest): Promise<{ task_id: string }> {
-    const response = await apiClient.post(`/predownload/${videoId}`, request)
+    const response = await apiClient.post(`/download/${videoId}`, request)
     return response.data
 }
 
