@@ -97,3 +97,30 @@ export function copySafeContainers(
     const allowed = new Set((matched.length ? matched : videoPool).flatMap((stream) => stream.copy_containers))
     return VIDEO_CONTAINERS.filter((candidate) => allowed.has(candidate))
 }
+
+export type CopySuggestions = {
+    codecs: VideoCodec[]
+    containers: Container[]
+}
+
+// Alternatives that fix a slow (re-encoded) selection: a codec that fits the
+// current container, and/or a container that fits the current codec.
+export function copySuggestions(
+    info: VideoInfo,
+    mode: Mode,
+    resolution: string | null,
+    videoCodec: VideoCodec | null,
+    container: Container,
+): CopySuggestions {
+    if (mode === Mode.AUDIO) return { codecs: [], containers: [] }
+
+    const pool = info.video_streams.filter((stream) => stream.resolution === resolution)
+    const codecs = [...new Set(
+        pool
+            .filter((stream) => stream.copy_containers.includes(container))
+            .map((stream) => videoCodecFamily(stream.codec ?? '')),
+    )].filter((codec) => codec !== videoCodec)
+
+    const containers = copySafeContainers(info, mode, resolution, videoCodec).filter((candidate) => candidate !== container)
+    return { codecs, containers }
+}

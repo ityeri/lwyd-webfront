@@ -5,7 +5,7 @@ import UnderlineDropdownSelect from '@/components/UnderlineDropdownSelect'
 import { AnimatePresence, motion } from 'framer-motion'
 import { AudioCodec, AUDIO_CONTAINERS, Container, Mode, VIDEO_CONTAINERS, VideoCodec } from '../enums'
 import { useMainStore } from '../store/useMainStore'
-import { audioCodecFamily, copySafeContainers, uniqueSorted, videoCodecFamily } from '../utils'
+import { audioCodecFamily, copySafeContainers, copySuggestions, uniqueSorted, videoCodecFamily } from '../utils'
 
 function DropdownOption({ value }: { value: string }) {
     return <span className="ml-4">{value}</span>
@@ -34,7 +34,11 @@ export default function StreamSettings() {
     const containers = mode === Mode.AUDIO ? AUDIO_CONTAINERS : VIDEO_CONTAINERS
     const copySafe = copySafeContainers(info, mode, videoResolution, videoCodec)
     const needsReencode = mode !== Mode.AUDIO && !copySafe.includes(container)
-    const suggestion = copySafe[0]
+    const { codecs: codecSuggestions, containers: containerSuggestions } = copySuggestions(info, mode, videoResolution, videoCodec, container)
+    const fixes = [
+        ...codecSuggestions.map((codec) => ({ label: `${codec} codec`, apply: () => setVideoCodec(codec) })),
+        ...containerSuggestions.map((candidate) => ({ label: `${candidate} format`, apply: () => setContainer(candidate) })),
+    ]
 
     return (
         <div className="flex flex-col gap-5">
@@ -126,18 +130,19 @@ export default function StreamSettings() {
                     >
                         <p className="text-text-secondary text-sm m-0 leading-5">
                             This video needs some extra processing, so it downloads slowly.
-                            {suggestion ? (
-                                <>
-                                    {' Try '}
+                            {fixes.length > 0 && ' For faster downloads, try '}
+                            {fixes.map((fix, index) => (
+                                <span key={fix.label}>
+                                    {index > 0 && (index === fixes.length - 1 ? ' or ' : ', ')}
                                     <button
                                         className="uppercase underline underline-offset-2 hover:text-text-primary"
-                                        onClick={() => setContainer(suggestion)}
+                                        onClick={fix.apply}
                                     >
-                                        {suggestion}
+                                        {fix.label}
                                     </button>
-                                    {' for faster downloads.'}
-                                </>
-                            ) : null}
+                                </span>
+                            ))}
+                            {fixes.length > 0 && '.'}
                         </p>
                     </motion.div>
                 )}
