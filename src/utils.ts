@@ -1,4 +1,5 @@
-import { AudioCodec, VideoCodec } from './enums'
+import type { StreamInfo, VideoInfo } from './api/video'
+import { AudioCodec, AUDIO_CONTAINERS, Container, Mode, VIDEO_CONTAINERS, VideoCodec } from './enums'
 
 export function extractVideoId(url: string): string | null {
     const match = url.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([\w-]{11})/)
@@ -27,4 +28,55 @@ export function uniqueSorted(values: (string | null)[]): string[] {
         if (!isNaN(an) && !isNaN(bn)) return bn - an
         return a.localeCompare(b)
     })
+}
+
+export type DefaultSelection = {
+    videoResolution: string | null
+    videoCodec: VideoCodec | null
+    audioBitrate: string | null
+    audioCodec: AudioCodec | null
+    container: Container
+}
+
+function pickVideoCodec(streams: StreamInfo[], container: Container): VideoCodec | null {
+    const copyable = streams.filter((stream) => stream.copy_containers.includes(container))
+    if (copyable.length) return videoCodecFamily(copyable[0].codec ?? '')
+    const families = uniqueSorted(streams.map((stream) => videoCodecFamily(stream.codec ?? ''))) as VideoCodec[]
+    return families.includes(VideoCodec.H264) ? VideoCodec.H264 : families[0] ?? null
+}
+
+function pickAudioCodec(streams: StreamInfo[], container: Container): AudioCodec | null {
+    const copyable = streams.filter((stream) => stream.copy_containers.includes(container))
+    const families = uniqueSorted((copyable.length ? copyable : streams).map((stream) => audioCodecFamily(stream.codec ?? ''))) as AudioCodec[]
+    return families.includes(AudioCodec.AAC) ? AudioCodec.AAC : families[0] ?? null
+}
+
+// Pick settings that let ffmpeg copy streams as-is instead of re-encoding them,
+// e.g. prefer the highest resolution whose codec fits mp4, else fall back to webm.
+export function pickCopySafeDefaults(info: VideoInfo, mode: Mode): DefaultSelection {
+    const audioStreams = info.audio_streams
+
+    if (mode === Mode.AUDIO) {
+        const pool = audioStreams.length ? audioStreams : []
+        return {
+            videoResolution: null,
+            videoCodec: null,
+            audioBitrate: uniqueSorted(pool.map((stream) => stream.abr))[0] ?? null,
+            audioCodec: pickAudioCodec(audioStreams, AUDIO_CONTAINERS[0]),
+            container: AUDIO_CONTAINERS[0],
+        }
+    }
+
+    const videoResolution = uniqueSorted(info.video_streams.map((stream) => stream.resolution))[0] ?? null
+    const topStreams = info.video_streams.filter((stream) => stream.resolution === videoResolution)
+    const container = VIDEO_CONTAINERS.find((candidate) => topStreams.some((stream) => stream.copy_containers.includes(candidate))) ?? Container.MP4
+    const copyableAudio = audioStreams.filter((stream) => stream.copy_containers.includes(container))
+    const audioPool = copyableAudio.length ? copyableAudio : audioStreams
+    return {
+        videoResolution,
+        videoCodec: pickVideoCodec(topStreams, container),
+        audioBitrate: uniqueSorted(audioPool.map((stream) => stream.abr))[0] ?? null,
+        audioCodec: pickAudioCodec(audioStreams, container),
+        container,
+    }
 }

@@ -9,6 +9,7 @@ export type StreamInfo = {
     codec: string | null
     container: string | null
     fps: number | null
+    copy_containers: string[]
 }
 
 export type VideoInfo = {
