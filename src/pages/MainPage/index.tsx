@@ -15,7 +15,14 @@ export default function MainPage() {
     return (
         <div className="flex flex-col items-center min-h-screen">
             <header className="w-full pt-10 pb-8">
-                <h1 className="text-center font-futura text-text-bright font-semibold tracking-widest text-4xl m-0">lwyd</h1>
+                <h1 className="text-center text-4xl m-0">
+                    <a
+                        href="/"
+                        className="font-futura text-text-bright font-semibold tracking-widest no-underline"
+                    >
+                        lwyd
+                    </a>
+                </h1>
             </header>
 
             <div className="flex flex-col gap-5 w-full max-w-xl px-4 pb-10">
