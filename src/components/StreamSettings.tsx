@@ -2,10 +2,10 @@ import AudioIcon from '@/components/icons/AudioIcon'
 import InfoIcon from '@/components/icons/InfoIcon'
 import VideoIcon from '@/components/icons/VideoIcon'
 import UnderlineDropdownSelect from '@/components/UnderlineDropdownSelect'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AudioCodec, AUDIO_CONTAINERS, Container, Mode, VIDEO_CONTAINERS, VideoCodec } from '../enums'
 import { useMainStore } from '../store/useMainStore'
-import { audioCodecFamily, uniqueSorted, videoCodecFamily } from '../utils'
+import { audioCodecFamily, copySafeContainers, copySuggestions, uniqueSorted, videoCodecFamily } from '../utils'
 
 function DropdownOption({ value }: { value: string }) {
     return <span className="ml-4">{value}</span>
@@ -32,6 +32,13 @@ export default function StreamSettings() {
     const audioBitrates = uniqueSorted(info.audio_streams.map((stream) => stream.abr))
     const audioCodecs = uniqueSorted(info.audio_streams.map((stream) => audioCodecFamily(stream.codec ?? '')))
     const containers = mode === Mode.AUDIO ? AUDIO_CONTAINERS : VIDEO_CONTAINERS
+    const copySafe = copySafeContainers(info, mode, videoResolution, videoCodec)
+    const needsReencode = mode !== Mode.AUDIO && !copySafe.includes(container)
+    const { codecs: codecSuggestions, containers: containerSuggestions } = copySuggestions(info, mode, videoResolution, videoCodec, container)
+    const fixes = [
+        ...codecSuggestions.map((codec) => ({ label: `${codec} codec`, apply: () => setVideoCodec(codec) })),
+        ...containerSuggestions.map((candidate) => ({ label: `${candidate} format`, apply: () => setContainer(candidate) })),
+    ]
 
     return (
         <div className="flex flex-col gap-5">
@@ -110,6 +117,36 @@ export default function StreamSettings() {
                     onSelect={(value) => setContainer(value as Container)}
                 />
             </div>
+
+            <AnimatePresence initial={false}>
+                {needsReencode && (
+                    <motion.div
+                        key="reencode-warning"
+                        className="overflow-hidden"
+                        initial={{ opacity: 0, height: 0, marginTop: -20 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
+                        exit={{ opacity: 0, height: 0, marginTop: -20 }}
+                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <p className="text-text-secondary text-sm m-0 leading-5">
+                            This video needs some extra processing, so it downloads slowly.
+                            {fixes.length > 0 && ' For faster downloads, try '}
+                            {fixes.map((fix, index) => (
+                                <span key={fix.label}>
+                                    {index > 0 && (index === fixes.length - 1 ? ' or ' : ', ')}
+                                    <button
+                                        className="uppercase underline underline-offset-2 hover:text-text-primary"
+                                        onClick={fix.apply}
+                                    >
+                                        {fix.label}
+                                    </button>
+                                </span>
+                            ))}
+                            {fixes.length > 0 && '.'}
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

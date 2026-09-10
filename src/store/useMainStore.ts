@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { AudioCodec, AUDIO_CONTAINERS, Container, Mode, VIDEO_CONTAINERS, VideoCodec } from '../enums'
 import { cancelTask, fetchTaskStatus, fetchVideoInfo, startDownload } from '../api/video'
 import type { DownloadRequest, TaskState, VideoInfo } from '../api/video'
-import { extractVideoId, uniqueSorted, videoCodecFamily, audioCodecFamily } from '../utils'
+import { extractVideoId, pickCopySafeDefaults, uniqueSorted } from '../utils'
 
 type MainState = {
     inputValue: string
@@ -69,18 +69,7 @@ export const useMainStore = create<MainState>((set, get) => ({
         set({ videoId: resolved, info: null, taskId: null, task: null, infoLoading: true, infoError: null })
         try {
             const data = await fetchVideoInfo(resolved)
-            const resolutions = uniqueSorted(data.video_streams.map((stream) => stream.resolution))
-            const videoCodecs = uniqueSorted(data.video_streams.map((stream) => videoCodecFamily(stream.codec ?? '')))
-            const bitrates = uniqueSorted(data.audio_streams.map((stream) => stream.abr))
-            const audioCodecs = uniqueSorted(data.audio_streams.map((stream) => audioCodecFamily(stream.codec ?? '')))
-            set({
-                info: data,
-                videoResolution: resolutions[0] ?? null,
-                videoCodec: videoCodecs.includes(VideoCodec.H264) ? VideoCodec.H264 : (videoCodecs[0] as VideoCodec | null) ?? null,
-                audioBitrate: bitrates[0] ?? null,
-                audioCodec: audioCodecs.includes(AudioCodec.AAC) ? AudioCodec.AAC : (audioCodecs[0] as AudioCodec | null) ?? null,
-                container: Container.MP4,
-            })
+            set({ info: data, ...pickCopySafeDefaults(data, get().mode) })
         } catch (error) {
             set({ infoError: error instanceof Error ? error.message : 'Unknown error' })
         } finally {
@@ -89,10 +78,11 @@ export const useMainStore = create<MainState>((set, get) => ({
     },
 
     setMode: (mode) => {
-        set({
-            mode,
-            container: mode === Mode.AUDIO ? AUDIO_CONTAINERS[0] : VIDEO_CONTAINERS[0],
-        })
+        const info = get().info
+        const container = info
+            ? pickCopySafeDefaults(info, mode).container
+            : mode === Mode.AUDIO ? AUDIO_CONTAINERS[0] : VIDEO_CONTAINERS[0]
+        set({ mode, container })
     },
 
     setVideoResolution: (value) => set({ videoResolution: value }),
