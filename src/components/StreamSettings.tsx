@@ -119,23 +119,23 @@ export default function StreamSettings() {
                     <motion.div
                         key="reencode-warning"
                         className="overflow-hidden"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, height: 0, marginTop: -20 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
+                        exit={{ opacity: 0, height: 0, marginTop: -20 }}
                         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                     >
-                        <p className="text-primary-300 text-sm m-0 leading-5">
-                            This video has to be re-encoded and downloads slowly.
+                        <p className="text-text-secondary text-sm m-0 leading-5">
+                            This video needs some extra processing, so it downloads slowly.
                             {suggestion ? (
                                 <>
-                                    {' Use '}
+                                    {' Try '}
                                     <button
-                                        className="uppercase underline underline-offset-2 hover:text-primary-200"
+                                        className="uppercase underline underline-offset-2 hover:text-text-primary"
                                         onClick={() => setContainer(suggestion)}
                                     >
                                         {suggestion}
                                     </button>
-                                    {' to copy the original streams instead.'}
+                                    {' for faster downloads.'}
                                 </>
                             ) : null}
                         </p>
