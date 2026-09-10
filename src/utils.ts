@@ -80,3 +80,20 @@ export function pickCopySafeDefaults(info: VideoInfo, mode: Mode): DefaultSelect
         container,
     }
 }
+
+// Containers that can hold the selected video stream without re-encoding it.
+// Video re-encoding is the slow path (audio-only re-encodes finish in seconds),
+// so this drives the warning. Empty for audio-only mode.
+export function copySafeContainers(
+    info: VideoInfo,
+    mode: Mode,
+    resolution: string | null,
+    videoCodec: VideoCodec | null,
+): Container[] {
+    if (mode === Mode.AUDIO) return []
+
+    const videoPool = info.video_streams.filter((stream) => stream.resolution === resolution)
+    const matched = videoPool.filter((stream) => videoCodecFamily(stream.codec ?? '') === videoCodec)
+    const allowed = new Set((matched.length ? matched : videoPool).flatMap((stream) => stream.copy_containers))
+    return VIDEO_CONTAINERS.filter((candidate) => allowed.has(candidate))
+}

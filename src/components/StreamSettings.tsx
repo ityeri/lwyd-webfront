@@ -2,10 +2,10 @@ import AudioIcon from '@/components/icons/AudioIcon'
 import InfoIcon from '@/components/icons/InfoIcon'
 import VideoIcon from '@/components/icons/VideoIcon'
 import UnderlineDropdownSelect from '@/components/UnderlineDropdownSelect'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AudioCodec, AUDIO_CONTAINERS, Container, Mode, VIDEO_CONTAINERS, VideoCodec } from '../enums'
 import { useMainStore } from '../store/useMainStore'
-import { audioCodecFamily, uniqueSorted, videoCodecFamily } from '../utils'
+import { audioCodecFamily, copySafeContainers, uniqueSorted, videoCodecFamily } from '../utils'
 
 function DropdownOption({ value }: { value: string }) {
     return <span className="ml-4">{value}</span>
@@ -32,6 +32,9 @@ export default function StreamSettings() {
     const audioBitrates = uniqueSorted(info.audio_streams.map((stream) => stream.abr))
     const audioCodecs = uniqueSorted(info.audio_streams.map((stream) => audioCodecFamily(stream.codec ?? '')))
     const containers = mode === Mode.AUDIO ? AUDIO_CONTAINERS : VIDEO_CONTAINERS
+    const copySafe = copySafeContainers(info, mode, videoResolution, videoCodec)
+    const needsReencode = mode !== Mode.AUDIO && !copySafe.includes(container)
+    const suggestion = copySafe[0]
 
     return (
         <div className="flex flex-col gap-5">
@@ -110,6 +113,35 @@ export default function StreamSettings() {
                     onSelect={(value) => setContainer(value as Container)}
                 />
             </div>
+
+            <AnimatePresence initial={false}>
+                {needsReencode && (
+                    <motion.div
+                        key="reencode-warning"
+                        className="overflow-hidden"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <p className="text-primary-300 text-sm m-0 leading-5">
+                            This video has to be re-encoded and downloads slowly.
+                            {suggestion ? (
+                                <>
+                                    {' Use '}
+                                    <button
+                                        className="uppercase underline underline-offset-2 hover:text-primary-200"
+                                        onClick={() => setContainer(suggestion)}
+                                    >
+                                        {suggestion}
+                                    </button>
+                                    {' to copy the original streams instead.'}
+                                </>
+                            ) : null}
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
