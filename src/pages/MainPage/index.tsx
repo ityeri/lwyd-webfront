@@ -4,6 +4,7 @@ import ModeTabs from '@/components/ModeTabs'
 import StreamSettings from '@/components/StreamSettings'
 import StatusTimeline from '@/components/StatusTimeline'
 import DownloadSection from '@/components/DownloadSection'
+import { useEffect } from 'react'
 import { useDownloadPolling } from '@/hooks/useDownloadPolling'
 import { useMainStore } from '@/store/useMainStore'
 
@@ -11,6 +12,11 @@ export default function MainPage() {
     useDownloadPolling()
     const info = useMainStore((state) => state.info)
     const infoError = useMainStore((state) => state.infoError)
+
+    useEffect(() => {
+        const videoId = useMainStore.getState().videoId
+        if (videoId && !useMainStore.getState().info) void useMainStore.getState().search(videoId)
+    }, [])
 
     return (
         <div className="flex flex-col items-center min-h-screen">
