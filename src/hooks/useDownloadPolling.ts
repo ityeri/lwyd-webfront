@@ -16,12 +16,14 @@ export function useDownloadPolling() {
                     setTask({
                         status: state.status,
                         progress: state.progress ?? null,
+                        video_progress: state.video_progress ?? null,
+                        audio_progress: state.audio_progress ?? null,
                         error: state.error,
                     })
                 }
             } catch (error) {
                 if (!cancelled) {
-                    setTask({ status: 'ERROR', progress: null, error: error instanceof Error ? error.message : 'Unknown error' })
+                    setTask({ status: 'ERROR', progress: null, video_progress: null, audio_progress: null, error: error instanceof Error ? error.message : 'Unknown error' })
                 }
             }
         }

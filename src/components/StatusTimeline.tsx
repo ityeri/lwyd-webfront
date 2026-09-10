@@ -1,13 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { TaskStatus } from '../enums'
+import { Mode, TaskStatus } from '../enums'
 import { useMainStore } from '../store/useMainStore'
+import type { TaskState } from '../api/video'
 
-const STAGES: { key: TaskStatus, label: string }[] = [
-    { key: TaskStatus.FETCHING, label: 'Fetching video info' },
-    { key: TaskStatus.DOWNLOADING, label: 'Downloading media' },
-    { key: TaskStatus.POST_PROCESSING, label: 'Post processing' },
-    { key: TaskStatus.DONE, label: 'Done' },
-]
+type StageKey = 'fetching' | 'video' | 'audio' | 'processing' | 'done'
+
+const STAGE_LABELS: Record<StageKey, string> = {
+    fetching: 'Fetching video info',
+    video: 'Downloading video',
+    audio: 'Downloading audio',
+    processing: 'Post processing',
+    done: 'Done',
+}
 
 const COLORS = {
     bright: '#ffffff',
@@ -17,21 +21,49 @@ const COLORS = {
     primary300: '#F3806B',
 }
 
-function stageIndex(status: TaskStatus): number {
-    return STAGES.findIndex((stage) => stage.key === status)
+// Stages depend on the mode: audio-only never downloads video and vice versa.
+function buildStages(mode: Mode): StageKey[] {
+    const stages: StageKey[] = ['fetching']
+    if (mode !== Mode.AUDIO) stages.push('video')
+    if (mode !== Mode.VIDEO) stages.push('audio')
+    stages.push('processing', 'done')
+    return stages
 }
 
-const PROGRESS_STATUSES = new Set<TaskStatus>([
-    TaskStatus.DOWNLOADING,
-    TaskStatus.POST_PROCESSING,
-    TaskStatus.DONE,
-])
+function currentStageIndex(status: TaskStatus, stages: StageKey[], task: TaskState): number {
+    const at = (key: StageKey) => stages.indexOf(key)
+    switch (status) {
+        case TaskStatus.FETCHING:
+            return at('fetching')
+        case TaskStatus.DOWNLOADING: {
+            const videoIndex = at('video')
+            if (videoIndex >= 0 && (task.video_progress ?? 0) < 1) return videoIndex
+            const audioIndex = at('audio')
+            if (audioIndex >= 0) return audioIndex
+            return videoIndex >= 0 ? videoIndex : at('processing')
+        }
+        case TaskStatus.POST_PROCESSING:
+            return at('processing')
+        case TaskStatus.DONE:
+            return at('done')
+        default:
+            return -1
+    }
+}
+
+function stageProgress(key: StageKey, task: TaskState): number | null {
+    if (key === 'video') return task.video_progress
+    if (key === 'audio') return task.audio_progress
+    if (key === 'processing' || key === 'done') return task.progress
+    return null
+}
 
 export default function StatusTimeline() {
     const task = useMainStore((state) => state.task)
+    const mode = useMainStore((state) => state.mode)
 
-    const currentStage = task ? stageIndex(task.status) : -1
-    const showProgress = task !== null && PROGRESS_STATUSES.has(task.status)
+    const stages = buildStages(mode)
+    const currentStage = task ? currentStageIndex(task.status, stages, task) : -1
 
     return (
         <AnimatePresence>
@@ -45,12 +77,12 @@ export default function StatusTimeline() {
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
                 <div className="flex flex-col items-center">
-                    {STAGES.map((stage, index) => {
+                    {stages.map((stage, index) => {
                         const state = currentStage > index ? 'done' : currentStage === index ? 'active' : 'pending'
-                        const isLast = index === STAGES.length - 1
+                        const isLast = index === stages.length - 1
                         const dotColor = state === 'done' ? COLORS.primary425 : state === 'active' ? COLORS.primary300 : COLORS.secondary
                         return (
-                            <div key={stage.key} className="relative flex flex-col items-center justify-center" style={{ minHeight: '3rem' }}>
+                            <div key={stage} className="relative flex flex-col items-center justify-center" style={{ minHeight: '3rem' }}>
                                 {!isLast && (
                                     <div className={`absolute left-1/2 -translate-x-1/2 top-1/2 w-px ${currentStage > index ? 'bg-primary-425' : 'bg-background-secondary'}`} style={{ height: '100%' }} />
                                 )}
@@ -72,18 +104,19 @@ export default function StatusTimeline() {
                     })}
                 </div>
                 <div className="flex flex-col justify-center flex-1 min-w-0">
-                    {STAGES.map((stage, index) => {
+                    {stages.map((stage, index) => {
                         const state = currentStage > index ? 'done' : currentStage === index ? 'active' : 'pending'
                         const textColor = state === 'done' ? COLORS.primary : state === 'active' ? COLORS.bright : COLORS.secondary
-                        const showBar = state === 'active' && showProgress
+                        const value = stageProgress(stage, task)
+                        const showBar = state === 'active' && value !== null
                         return (
-                            <div key={stage.key} className="flex items-center gap-3" style={{ minHeight: '3rem' }}>
+                            <div key={stage} className="flex items-center gap-3" style={{ minHeight: '3rem' }}>
                                 <motion.p
                                     className="text-sm m-0 whitespace-nowrap"
                                     animate={{ color: textColor }}
                                     transition={{ duration: 0.6, ease: 'easeOut' }}
                                 >
-                                    {stage.label}
+                                    {STAGE_LABELS[stage]}
                                 </motion.p>
                                 {showBar && (
                                     <>
@@ -91,11 +124,11 @@ export default function StatusTimeline() {
                                             <motion.div
                                                 className="h-full bg-primary-425 rounded-full"
                                                 initial={{ width: '0%' }}
-                                                animate={{ width: `${Math.min(100, (task.progress ?? 0) * 100)}%` }}
+                                                animate={{ width: `${Math.min(100, value * 100)}%` }}
                                                 transition={{ duration: 0.4, ease: 'easeOut' }}
                                             />
                                         </div>
-                                        <p className="text-text-secondary text-xs m-0 tabular-nums">{Math.round((task.progress ?? 0) * 100)}%</p>
+                                        <p className="text-text-secondary text-xs m-0 tabular-nums">{Math.round(value * 100)}%</p>
                                     </>
                                 )}
                             </div>

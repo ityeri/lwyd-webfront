@@ -156,7 +156,7 @@ export async function pollTask(taskId: string): Promise<TaskState | null> {
         return null
     }
     useMainStore.setState({ cancelling: false })
-    return { status: data.status, progress: data.progress, error: data.error }
+    return { status: data.status, progress: data.progress, video_progress: data.video_progress, audio_progress: data.audio_progress, error: data.error }
 }
 
 useMainStore.subscribe((state) => {
