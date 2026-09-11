@@ -29,6 +29,19 @@
     --font-futura: 'Futura', 'Jost', sans-serif;
 
     --radius-primary: 2rem;
+
+    --animate-glow: glow 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+    @keyframes glow {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(2.4);
+            opacity: 0;
+        }
+    }
 }
 
 @layer base {

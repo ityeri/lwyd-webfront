@@ -92,10 +92,9 @@ export default function StatusTimeline() {
                                     transition={{ duration: 0.6, ease: 'easeOut' }}
                                 >
                                     {state === 'active' && (
-                                        <motion.div
-                                            className="absolute inset-0 rounded-full"
-                                            animate={{ scale: [1, 2.4], opacity: [1, 0], backgroundColor: dotColor }}
-                                            transition={{ duration: 1, repeat: Infinity, ease: 'easeOut' }}
+                                        <span
+                                            className="absolute inset-0 rounded-full animate-glow"
+                                            style={{ backgroundColor: dotColor }}
                                         />
                                     )}
                                 </motion.div>
